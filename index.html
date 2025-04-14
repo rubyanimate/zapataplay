@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Material Music Stream</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .player {
+      background: #fff;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      border-radius: 16px;
+      width: 320px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .cover {
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .artist {
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .material-icons {
+      font-size: 32px;
+      color: #3f51b5;
+      cursor: pointer;
+    }
+
+    .progress {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="player">
+    <img src="" class="cover" alt="Album Cover">
+    <div class="title"></div>
+    <div class="artist"></div>
+    <div class="controls">
+      <span class="material-icons" onclick="prevSong()">skip_previous</span>
+      <span class="material-icons" id="playPauseBtn" onclick="togglePlay()">play_arrow</span>
+      <span class="material-icons" onclick="nextSong()">skip_next</span>
+    </div>
+    <input type="range" class="progress" id="progressBar" value="0" min="0" max="100">
+    <audio id="audio" ontimeupdate="updateProgress()" onended="nextSong()"></audio>
+  </div>
+
+  <script>
+    let songs = [];
+    let currentIndex = 0;
+    const audio = document.getElementById('audio');
+    const title = document.querySelector('.title');
+    const artist = document.querySelector('.artist');
+    const cover = document.querySelector('.cover');
+    const progressBar = document.getElementById('progressBar');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+
+    fetch('songs.json')
+      .then(response => response.json())
+      .then(data => {
+        songs = data;
+        loadSong(currentIndex);
+      });
+
+    function loadSong(index) {
+      const song = songs[index];
+      title.textContent = song.song;
+      artist.textContent = song.artist;
+      cover.src = song.album_cover;
+      audio.src = song.mp3;
+      progressBar.value = 0;
+      playPauseBtn.textContent = 'play_arrow';
+    }
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play();
+        playPauseBtn.textContent = 'pause';
+      } else {
+        audio.pause();
+        playPauseBtn.textContent = 'play_arrow';
+      }
+    }
+
+    function nextSong() {
+      currentIndex = (currentIndex + 1) % songs.length;
+      loadSong(currentIndex);
+      audio.play();
+      playPauseBtn.textContent = 'pause';
+    }
+
+    function prevSong() {
+      currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+      loadSong(currentIndex);
+      audio.play();
+      playPauseBtn.textContent = 'pause';
+    }
+
+    function updateProgress() {
+      if (audio.duration) {
+        progressBar.value = (audio.currentTime / audio.duration) * 100;
+      }
+    }
+
+    progressBar.addEventListener('input', () => {
+      audio.currentTime = (progressBar.value / 100) * audio.duration;
+    });
+  </script>
+</body>
+</html>
